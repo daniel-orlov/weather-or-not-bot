@@ -329,37 +329,6 @@ var handlersEn = map[string]func(um *UserMessage){
 
 //DATABASE CALLS
 
-func retrieveCoordinates(conn *pgx.Conn, location string) bot.Location {
-	fmt.Println("EXECUTING: retrieveCoordinates")
-	loc := bot.Location{}
-	sqlQuery := fmt.Sprintf(
-		`SELECT latitude, longitude 
-				FROM places
-				WHERE city = '%v'
-				`,
-		location,
-	)
-	fmt.Println(sqlQuery)
-	var lat, long string
-	err := conn.QueryRow(context.Background(), sqlQuery).Scan(&lat, &long)
-	if err != nil {
-		err = errors.Wrap(err, "FAILED: QueryRow when retrieving Coordinates")
-		fmt.Println(err)
-	}
-	fmt.Println("LONG", long, "LAT", lat)
-	loc.Latitude, err = strconv.ParseFloat(lat, 64)
-	if err != nil {
-		err = errors.Wrap(err, "Latitude parsing failed")
-		fmt.Println(err)
-	}
-	loc.Longitude, err = strconv.ParseFloat(long, 64)
-	if err != nil {
-		err = errors.Wrap(err, "Longitude parsing failed")
-		fmt.Println(err)
-	}
-	return loc
-}
-
 func fetchEmojis(backup map[string]int) map[string]int {
 	fmt.Println("EXECUTING: fetchEmojis")
 	cfg := parseConfig()
