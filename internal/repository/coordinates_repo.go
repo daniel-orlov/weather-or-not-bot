@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/daniel-orlov/weather-or-not-bot/internal/types"
 	"strconv"
+	"weather-or-not-bot/internal/types"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
 	"github.com/jackc/pgx"

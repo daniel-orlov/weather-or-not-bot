@@ -1,4 +1,4 @@
-module weather_or_not_bot
+module weather-or-not-bot
 
 go 1.16
 
