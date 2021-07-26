@@ -1,4 +1,4 @@
-package main
+package service
 
 var sayingsEn = []string{
 	"Let's see weather or not you should leave umbrella at home.",
@@ -38,55 +38,6 @@ var monthsEn = map[string]string{
 	"11": "November",
 	"12": "December",
 }
-
-var emojisBackUp = map[string]int{
-	"Wind":         127788,
-	"Thermometer":  127777,
-	"Comet":        9732,
-	"N":            11015,
-	"E":            11013,
-	"W":            10145,
-	"S":            11014,
-	"SE":           8598,
-	"ESE":          8598,
-	"SSE":          8598,
-	"SW":           8599,
-	"SSW":          8599,
-	"WSW":          8599,
-	"NW":           8600,
-	"WNW":          8600,
-	"NNW":          8600,
-	"NE":           8601,
-	"ENE":          8601,
-	"NNE":          8601,
-	"Balloon":      127880,
-	"Check":        9989,
-	"Warning":      9888,
-	"Smoking":      128684,
-	"Cross":        10060,
-	"Question":     10067,
-	"ThunderRain":  9928,
-	"Thunder":      127785,
-	"Umbrella":     9730,
-	"UmbrellaRain": 9748,
-	"CloudRain":    127783,
-	"CloudSnow":    127784,
-	"Saturn":       129680,
-	"Fog":          127787,
-	"Sun":          9728,
-	"SunSCloud":    127780,
-	"SunMCloud":    9925,
-	"Cloud":        9729,
-	"Up":           128316,
-	"Down":         128317,
-	"Dry":          129344,
-	"Wet":          128167,
-	"Low":          10549,
-	"High":         10548,
-}
-
-//fetching emojis from db
-var emojis = fetchEmojis(emojisBackUp)
 
 var commentsEn = map[string]string{
 	"no":                "👒 No danger to the average person.",
@@ -128,6 +79,7 @@ var commentsEn = map[string]string{
 	"120Hours":          "120 hours",
 }
 
+// TODO split with space and only use the first part
 var timePeriodsEn = map[string]int{
 	"3 days":    3,
 	"5 days":    5,

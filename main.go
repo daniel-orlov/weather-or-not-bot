@@ -7,15 +7,39 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	tgbotapi "gopkg.in/telegram-bot-api.v4"
 )
+
+type config struct {
+	WebhookURL string `env:"WEBHOOK"`
+	WeatherAPI string `env:"WEATHER_API"`
+	Language   string `env:"LANGUAGE"`
+	DbUrl      string `env:"DATABASE_URL"`
+}
+
+func init() {
+	pflag.String("bot_token", `fake_token`, "Token to access Telegram Bot API")
+	pflag.String("port", "8080", "Port to listen to")
+
+	pflag.String("webhook", "", "Webhook URL to get weather forecasts from")
+	pflag.String("weather_api_key", "", "Client's key to access weather API")
+
+	pflag.String("database_url", "", "Database access URL")
+	pflag.String("language", "", "Service language")
+
+	pflag.Parse()
+	_ = viper.BindPFlags(pflag.CommandLine)
+	viper.AutomaticEnv()
+}
 
 func main() {
 	//parsing config from .env
 	var cfg = parseConfig()
 
 	//establishing connection to database
-	conn, err := pgx.Connect(context.Background(), cfg.DbUrl)
+	conn, err := pgx.Connect(context.Background(), viper.GetString("database_url"))
 	if err != nil {
 		err = errors.Wrap(err, "Unable to connect to database")
 		fmt.Println(err)
@@ -23,7 +47,7 @@ func main() {
 	defer conn.Close(context.Background())
 
 	//creating a new BotAPI instance using token
-	bot, err := tgbotapi.NewBotAPI(cfg.BotToken)
+	bot, err := tgbotapi.NewBotAPI(viper.GetString("bot_token"))
 	if err != nil {
 		err = errors.Wrap(err, "failed to create new BotAPI with given token")
 		fmt.Println(err)
@@ -33,7 +57,7 @@ func main() {
 	// bot.Debug = true
 
 	// setting a webhook
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook(cfg.WebhookURL))
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook(viper.GetString("webhook")))
 	if err != nil {
 		err = errors.Wrap(err, "failed to set WebHook")
 		fmt.Println(err)
@@ -43,8 +67,8 @@ func main() {
 	updates := bot.ListenForWebhook("/")
 
 	// launching a server on a local host :8080
-	go http.ListenAndServe(cfg.Port, nil)
-	fmt.Println("start listen", cfg.Port)
+	go http.ListenAndServe(viper.GetString("port"), nil)
+	fmt.Println("start listen", viper.GetString("port"))
 
 	// handling messages from user
 	for update := range updates {
