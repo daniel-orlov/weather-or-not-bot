@@ -1,5 +1,10 @@
 package types
 
+import (
+	"encoding/json"
+	"github.com/pkg/errors"
+)
+
 type FullWeatherReport struct {
 	CityName string  `json:"city_name"`
 	Data     []*Stat `json:"data"`
@@ -31,4 +36,15 @@ type Stat struct {
 type Weather struct {
 	Description string `json:"description"`
 	Code        int    `json:"code"`
+}
+
+// ParseWeather parses JSON into FullWeatherReport,	which then can be used to retrieve weather information.
+func ParseWeather(weather []byte) (*FullWeatherReport, error) {
+	data := FullWeatherReport{}
+	err := json.Unmarshal(weather, &data)
+	if err != nil {
+		return &FullWeatherReport{}, errors.Wrap(err, "cannot unmarshal")
+	}
+
+	return &data, nil
 }

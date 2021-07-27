@@ -19,7 +19,9 @@ func NewLocationRepo(db *sqlx.DB) *LocationRepo {
 	return &LocationRepo{db: db}
 }
 
-func (r LocationRepo) GetUserRecentLocation(ctx context.Context, userID int) (*types.UserCoordinates, error) {
+// TODO move logging out of here
+
+func (r *LocationRepo) GetUserRecentLocation(ctx context.Context, userID int) (*types.UserCoordinates, error) {
 	log := ctxlogrus.Extract(ctx).WithFields(logrus.Fields{
 		"user_id": userID,
 	})
@@ -41,7 +43,7 @@ const saveLocationNameQuery = `
 	SET location_name = $5;
 `
 
-func (r LocationRepo) SaveLocationName(ctx context.Context, userID int, locationName string) error {
+func (r *LocationRepo) SaveLocationName(ctx context.Context, userID int, locationName string) error {
 	log := ctxlogrus.Extract(ctx).WithFields(logrus.Fields{
 		"user_id":       userID,
 		"location_name": locationName,
@@ -68,7 +70,7 @@ const getCoordinatesByCityNameQuery = `
 	WHERE city = $1;
 	`
 
-func (r LocationRepo) GetCoordinatesByCityName(ctx context.Context, locationName string) (bot.Location, error) {
+func (r *LocationRepo) GetCoordinatesByCityName(ctx context.Context, locationName string) (bot.Location, error) {
 	log := ctxlogrus.Extract(ctx).WithFields(logrus.Fields{
 		"location_name": locationName,
 	})

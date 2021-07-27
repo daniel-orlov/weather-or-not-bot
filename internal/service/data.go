@@ -10,20 +10,6 @@ var sayingsEn = []string{
 	"Do you know that bad weather always looks worse through a window?",
 }
 
-var forecasts = map[string]string{
-	"Now":       "current?",
-	"3 days":    "forecast/daily?",
-	"5 days":    "forecast/daily?",
-	"7 days":    "forecast/daily?",
-	"10 days":   "forecast/daily?",
-	"16 days":   "forecast/daily?",
-	"24 hours":  "forecast/hourly?hours=24&",
-	"48 hours":  "forecast/hourly?hours=48&",
-	"72 hours":  "forecast/hourly?hours=72&",
-	"96 hours":  "forecast/hourly?hours=96&",
-	"120 hours": "forecast/hourly?hours=120&",
-}
-
 var monthsEn = map[string]string{
 	"01": "January",
 	"02": "February",

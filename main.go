@@ -35,8 +35,6 @@ func init() {
 }
 
 func main() {
-	//parsing config from .env
-	var cfg = parseConfig()
 
 	//establishing connection to database
 	conn, err := pgx.Connect(context.Background(), viper.GetString("database_url"))

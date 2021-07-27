@@ -6,24 +6,25 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	bot "gopkg.in/telegram-bot-api.v4"
 	"io/ioutil"
 	"net/http"
+	"weather-or-not-bot/internal/types"
 )
 
 type ForecastClient struct {
 }
 
-func (c *ForecastClient) GetForecast(ctc context.Context, loc *bot.Location, period string) ([]byte, error) {
+// TODO make this pretty and refactor
+
+func (c *ForecastClient) GetForecast(ctx context.Context, loc *types.UserCoordinates, period string) ([]byte, error) {
 	log := ctxlogrus.Extract(ctx)
 	log.Debug("Getting forecast data from a third-party provider")
 
-	cfg := parseConfig()
 	lat := fmt.Sprint(loc.Latitude)
 	long := fmt.Sprint(loc.Longitude)
 	baseWeatherURL := "https://weatherbit-v1-mashape.p.rapidapi.com/"
 	url := fmt.Sprintf(
-		"%v%vlang=%v&lat=%v&lon=%v", baseWeatherURL, forecasts[period], cfg.Language, lat, long,
+		"%v%vlang=%v&lat=%v&lon=%v", baseWeatherURL, forecasts[period], viper.GetString("language"), lat, long,
 	)
 
 	req, _ := http.NewRequest("GET", url, nil)
@@ -44,4 +45,18 @@ func (c *ForecastClient) GetForecast(ctc context.Context, loc *bot.Location, per
 	}
 	fmt.Println("BODY:", string(body))
 	return body, nil
+}
+
+var forecasts = map[string]string{
+	"Now":       "current?",
+	"3 days":    "forecast/daily?",
+	"5 days":    "forecast/daily?",
+	"7 days":    "forecast/daily?",
+	"10 days":   "forecast/daily?",
+	"16 days":   "forecast/daily?",
+	"24 hours":  "forecast/hourly?hours=24&",
+	"48 hours":  "forecast/hourly?hours=48&",
+	"72 hours":  "forecast/hourly?hours=72&",
+	"96 hours":  "forecast/hourly?hours=96&",
+	"120 hours": "forecast/hourly?hours=120&",
 }

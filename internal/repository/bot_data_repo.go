@@ -2,28 +2,28 @@ package repository
 
 import bot "gopkg.in/telegram-bot-api.v4"
 
-type BotDataRepo struct {
+type BotUIRepo struct {
 }
 
-func (r *BotDataRepo) GetLocationKeyboard() bot.ReplyKeyboardMarkup {
+func (r *BotUIRepo) GetMainMenuKeyboard() bot.ReplyKeyboardMarkup {
 	return bot.NewReplyKeyboard(
 		bot.NewKeyboardButtonRow(bot.NewKeyboardButtonLocation(commentsEn["AtMyLocation"])),
 		bot.NewKeyboardButtonRow(bot.NewKeyboardButton(commentsEn["AtADiffPlace"])),
 	)
 }
 
-func (r *BotDataRepo) GetBackToMainMenuKeyboard() bot.ReplyKeyboardMarkup {
+func (r *BotUIRepo) GetBackToMainMenuKeyboard() bot.ReplyKeyboardMarkup {
 	return bot.NewReplyKeyboard(bot.NewKeyboardButtonRow(bot.NewKeyboardButton(commentsEn["Back0"])))
 }
 
-func (r *BotDataRepo) GetDaysOrHoursKeyboard() bot.ReplyKeyboardMarkup {
+func (r *BotUIRepo) GetDaysOrHoursKeyboard() bot.ReplyKeyboardMarkup {
 	return bot.NewReplyKeyboard(
 		bot.NewKeyboardButtonRow(bot.NewKeyboardButton(commentsEn["ByHours"]), bot.NewKeyboardButton(commentsEn["ByDays"])),
 		bot.NewKeyboardButtonRow(bot.NewKeyboardButton(commentsEn["Now"]), bot.NewKeyboardButton(commentsEn["Back0"])),
 	)
 }
 
-func (r *BotDataRepo) GetDaysKeyboard() bot.ReplyKeyboardMarkup {
+func (r *BotUIRepo) GetDaysKeyboard() bot.ReplyKeyboardMarkup {
 	return bot.NewReplyKeyboard(
 		bot.NewKeyboardButtonRow(
 			bot.NewKeyboardButton(commentsEn["3Days"]),
@@ -38,7 +38,7 @@ func (r *BotDataRepo) GetDaysKeyboard() bot.ReplyKeyboardMarkup {
 	)
 }
 
-func (r *BotDataRepo) GetDaysKeyboard() bot.ReplyKeyboardMarkup {
+func (r *BotUIRepo) GetHoursKeyboard() bot.ReplyKeyboardMarkup {
 	return bot.NewReplyKeyboard(
 		bot.NewKeyboardButtonRow(
 			bot.NewKeyboardButton(commentsEn["24Hours"]),
