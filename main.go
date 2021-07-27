@@ -1,15 +1,12 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"net/http"
 	"weather-or-not-bot/internal/repository"
 	"weather-or-not-bot/internal/service"
 	"weather-or-not-bot/internal/transport"
 	"weather-or-not-bot/utils"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 
 	"github.com/spf13/pflag"
@@ -33,13 +30,11 @@ func init() {
 func main() {
 	// Creating logger
 	ctx, cancelFunc := utils.NewLogger()
+	defer cancelFunc()
 
 	// Establishing connection to database.
 	db := utils.NewDBFromEnv()
-	defer func(cancelFunc context.CancelFunc, db *sqlx.DB) {
-		cancelFunc()
-		_ = db.Close()
-	}(cancelFunc, db)
+	defer db.Close()
 
 	// Initiating all repositories.
 	userRepo := repository.NewUserDataRepo(db)
@@ -62,7 +57,7 @@ func main() {
 			logrus.WithError(err).Fatal("Cannot listen and serve")
 		}
 	}()
-	fmt.Println("start listen", viper.GetString("port"))
+	logrus.Infof("start listen on port %s", viper.GetString("port"))
 
 	// Handling messages from user.
 	updatesHandler := transport.NewUpdatesHandler(svc, botClient.ListenForWebhook("/"))
