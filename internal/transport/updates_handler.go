@@ -3,6 +3,7 @@ package transport
 import (
 	"context"
 	"fmt"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
 
 	"github.com/pkg/errors"
 	bot "gopkg.in/telegram-bot-api.v4"
@@ -12,16 +13,34 @@ type MessageService interface {
 	HandleSomething()
 }
 
-type BotServer struct {
+type UpdatesHandler struct {
 	svc MessageService
+	upd bot.UpdatesChannel
 }
 
-func NewBotServer(svc MessageService) *BotServer {
-	return &BotServer{svc: svc}
+func NewUpdatesHandler(svc MessageService, upd bot.UpdatesChannel) *UpdatesHandler {
+	return &UpdatesHandler{svc: svc, upd: upd}
 }
 
-func (s *BotServer) Stop(ctx context.Context, um *UserMessage) {
+func (h UpdatesHandler) Handle(ctx context.Context) error {
+	log := ctxlogrus.Extract(ctx)
 
+	for update := range h.upd {
+		log.Debugf("New message from user: %+v\n", update.Message.Text)
+
+		userMsg := NewUserMessage(bot, conn, &update)
+		text := update.Message.Text
+		if handle, ok := handlersEn[text]; ok {
+			handle(&userMsg)
+		} else {
+			handleLocationByText(&userMsg)
+		}
+	}
+}
+
+
+func (s *UpdatesHandler) stop(ctx context.Context, um *UserMessage) {
+	
 }
 
 func handleStop(um *UserMessage) {

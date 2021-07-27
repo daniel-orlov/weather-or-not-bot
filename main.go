@@ -41,16 +41,14 @@ func main() {
 	//establishing connection to database
 	conn, err := pgx.Connect(context.Background(), viper.GetString("database_url"))
 	if err != nil {
-		err = errors.Wrap(err, "Unable to connect to database")
-		fmt.Println(err)
+		fmt.Println(errors.Wrap(err, "Unable to connect to database"))
 	}
 	defer conn.Close(context.Background())
 
 	//creating a new BotAPI instance using token
 	bot, err := tgbotapi.NewBotAPI(viper.GetString("bot_token"))
 	if err != nil {
-		err = errors.Wrap(err, "failed to create new BotAPI with given token")
-		fmt.Println(err)
+		fmt.Println(errors.Wrap(err, "failed to create new BotAPI with given token"))
 	}
 	fmt.Printf("Authorized on account %s\n", bot.Self.UserName)
 
@@ -59,8 +57,7 @@ func main() {
 	// setting a webhook
 	_, err = bot.SetWebhook(tgbotapi.NewWebhook(viper.GetString("webhook")))
 	if err != nil {
-		err = errors.Wrap(err, "failed to set WebHook")
-		fmt.Println(err)
+		fmt.Println(errors.Wrap(err, "failed to set WebHook"))
 	}
 
 	// registering an http handler for a webhook, returns UpdatesChannel (<-chan Update)
