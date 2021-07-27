@@ -22,6 +22,7 @@ type LocationRepo interface {
 	GetUserRecentLocation(ctx context.Context, userID int) (*types.UserCoordinates, error)
 	SaveLocationName(ctx context.Context, userID int, locationName string) error
 	GetCoordinatesByCityName(ctx context.Context, locationName string) (bot.Location, error)
+	AddLocationByCoordinates(ctx context.Context, userID int, loc *bot.Location) error
 }
 
 type ForecastClient interface {
@@ -29,7 +30,7 @@ type ForecastClient interface {
 }
 
 type ReportFormatter interface {
-	FormatNow(ctx context.Context) string
-	FormatHours(ctx context.Context, hours int) string
-	FormatDays(ctx context.Context, days int) string
+	FormatNow(ctx context.Context, report *types.FullWeatherReport) string
+	FormatHours(ctx context.Context, report *types.FullWeatherReport, hours int) string
+	FormatDays(ctx context.Context, report *types.FullWeatherReport, days int) string
 }

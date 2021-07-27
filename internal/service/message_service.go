@@ -2,8 +2,9 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
+	"strconv"
+	"strings"
 	"weather-or-not-bot/internal/types"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
@@ -13,24 +14,29 @@ import (
 )
 
 type MessageService struct {
-	botClient *bot.BotAPI
-	userRepo  UserDataRepo
-	botUIRepo BotUIRepo
-	locaRepo  LocationRepo
-	forecasts ForecastClient
-	formatter Formatter
+	botCmd   *bot.BotAPI
+	usrRepo  UserDataRepo
+	botRepo  BotUIRepo
+	locRepo  LocationRepo
+	forecast ForecastClient
+	format   ReportFormatter
 }
 
-// TODO add constructor here
+func NewMessageService(botCmd *bot.BotAPI, usrRepo UserDataRepo, botRepo BotUIRepo, locRepo LocationRepo, forecast ForecastClient, format ReportFormatter) *MessageService {
+	return &MessageService{botCmd: botCmd, usrRepo: usrRepo, botRepo: botRepo, locRepo: locRepo, forecast: forecast, format: format}
+}
 
 const (
-	Start          = "/start"
-	BackToMainMenu = "< Back"
-	Back           = "<< Back"
-	ByHours        = "By Hours"
-	ByDays         = "By Days"
-	CurrentWeather = "Now"
-	Stop           = "/stop"
+	Start            = "/start"
+	BackToMainMenu   = "< Back"
+	Back             = "<< Back"
+	ByHours          = "By Hours"
+	ByDays           = "By Days"
+	CurrentWeather   = "Now"
+	EmptyMessage     = ""
+	WeatherHere      = "Weather at my location"
+	WeatherElsewhere = "Weather elsewhere"
+	Stop             = "/stop"
 
 	ThreeDays          = "3 days"
 	FiveDays           = "5 days"
@@ -44,31 +50,8 @@ const (
 	HundredTwentyHours = "120 hours"
 
 	HOURLY = true
-	DAILY = false
+	DAILY  = false
 )
-
-var handlersEn = map[string]func(um *UserMessage){
-	//"/stop":                  handleStop,
-	//"/start":                 handleStart,
-	"":                       handleEmpty,
-	"Weather at my location": handleLocationByCoords,
-	"Weather elsewhere":      handleWeatherElsewhere,
-	//"< Back":                 handleBackToMainMenu,
-	//"<< Back":                handleBack,
-	//"By Days":                handleByDays,
-	//"By Hours":               handleByHours,
-	//"Now":                    handleNow,
-	//"3 days":    handleDays,
-	//"5 days":    handleDays,
-	//"7 days":    handleDays,
-	//"10 days":   handleDays,
-	//"16 days":   handleDays,
-	//"24 hours":  handleHours,
-	//"48 hours":  handleHours,
-	//"72 hours":  handleHours,
-	//"96 hours":  handleHours,
-	//"120 hours": handleHours,
-}
 
 func (s *MessageService) HandleNewMessage(ctx context.Context, upd bot.Update) error {
 	log := ctxlogrus.Extract(ctx).WithFields(logrus.Fields{
@@ -96,8 +79,16 @@ func (s *MessageService) HandleNewMessage(ctx context.Context, upd bot.Update) e
 		err = s.handlePeriod(ctx, upd.Message, HOURLY)
 	case TwentyFourHours, FortyEightHours, SeventyTwoHours, NinetySixHours, HundredTwentyHours:
 		err = s.handlePeriod(ctx, upd.Message, DAILY)
+	case WeatherHere:
+		err = s.handleLocationByCoordinates(ctx, upd.Message)
+	case WeatherElsewhere:
+		err = s.handleWeatherElsewhere(ctx, upd.Message)
+	case EmptyMessage:
+		err = s.handleEmptyMessage(ctx, upd.Message)
 	case Stop:
 		err = s.handleStop(ctx, upd.Message)
+	default:
+		err = s.handleUnknown(ctx, upd.Message)
 	}
 
 	if err != nil {
@@ -113,7 +104,7 @@ func (s *MessageService) handleStop(ctx context.Context, req *bot.Message) error
 	resp := bot.NewMessage(req.Chat.ID, commentsEn["End"])
 	resp.ReplyMarkup = bot.ReplyKeyboardHide{HideKeyboard: true}
 
-	_, err := s.botClient.Send(resp)
+	_, err := s.botCmd.Send(resp)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
@@ -124,16 +115,16 @@ func (s *MessageService) handleStop(ctx context.Context, req *bot.Message) error
 func (s *MessageService) handleStart(ctx context.Context, req *bot.Message) error {
 	ctxlogrus.Extract(ctx).Debugf("Handling '%s'", req.Text)
 
-	err := s.userRepo.AddUserIfNotExists(ctx, req.From)
+	err := s.usrRepo.AddUserIfNotExists(ctx, req.From)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
 
 	// TODO create func greet()
 	resp := bot.NewMessage(req.Chat.ID, commentsEn["DefaultMessage"]+"\n"+pickASaying(sayingsEn))
-	resp.ReplyMarkup = s.botUIRepo.GetMainMenuKeyboard()
+	resp.ReplyMarkup = s.botRepo.GetMainMenuKeyboard()
 
-	_, err = s.botClient.Send(resp)
+	_, err = s.botCmd.Send(resp)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
@@ -145,9 +136,9 @@ func (s *MessageService) handleBackToMainMenu(ctx context.Context, req *bot.Mess
 	ctxlogrus.Extract(ctx).Debugf("Handling '%s'", req.Text)
 
 	resp := bot.NewMessage(req.Chat.ID, commentsEn["ChooseLocation"])
-	resp.ReplyMarkup = s.botUIRepo.GetMainMenuKeyboard()
+	resp.ReplyMarkup = s.botRepo.GetMainMenuKeyboard()
 
-	_, err := s.botClient.Send(resp)
+	_, err := s.botCmd.Send(resp)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
@@ -159,9 +150,9 @@ func (s *MessageService) handleBack(ctx context.Context, req *bot.Message) error
 	ctxlogrus.Extract(ctx).Debugf("Handling '%s'", req.Text)
 
 	resp := bot.NewMessage(req.Chat.ID, commentsEn["ChoosePeriodType"])
-	resp.ReplyMarkup = s.botUIRepo.GetDaysOrHoursKeyboard()
+	resp.ReplyMarkup = s.botRepo.GetDaysOrHoursKeyboard()
 
-	_, err := s.botClient.Send(resp)
+	_, err := s.botCmd.Send(resp)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
@@ -173,9 +164,9 @@ func (s *MessageService) handleByHours(ctx context.Context, req *bot.Message) er
 	ctxlogrus.Extract(ctx).Debugf("Handling '%s'", req.Text)
 
 	resp := bot.NewMessage(req.Chat.ID, commentsEn["ChoosePeriod"])
-	resp.ReplyMarkup = s.botUIRepo.GetHoursKeyboard()
+	resp.ReplyMarkup = s.botRepo.GetHoursKeyboard()
 
-	_, err := s.botClient.Send(resp)
+	_, err := s.botCmd.Send(resp)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
@@ -187,9 +178,9 @@ func (s *MessageService) handleByDays(ctx context.Context, req *bot.Message) err
 	ctxlogrus.Extract(ctx).Debugf("Handling '%s'", req.Text)
 
 	resp := bot.NewMessage(req.Chat.ID, commentsEn["ChoosePeriod"])
-	resp.ReplyMarkup = s.botUIRepo.GetDaysKeyboard()
+	resp.ReplyMarkup = s.botRepo.GetDaysKeyboard()
 
-	_, err := s.botClient.Send(resp)
+	_, err := s.botCmd.Send(resp)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
@@ -201,12 +192,12 @@ func (s *MessageService) handleNow(ctx context.Context, req *bot.Message) error 
 	log := ctxlogrus.Extract(ctx)
 	log.Debugf("Handling '%s'", req.Text)
 
-	loc, err := s.locaRepo.GetUserRecentLocation(ctx, req.From.ID)
+	loc, err := s.locRepo.GetUserRecentLocation(ctx, req.From.ID)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
 
-	forecast, err := s.forecasts.GetForecast(ctx, loc, req.Text)
+	forecast, err := s.forecast.GetForecast(ctx, loc, req.Text)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
@@ -216,15 +207,15 @@ func (s *MessageService) handleNow(ctx context.Context, req *bot.Message) error 
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
 
-	resp := bot.NewMessage(req.Chat.ID, s.formatter.FormatNow(ctx))
-	resp.ReplyMarkup = s.botUIRepo.GetDaysOrHoursKeyboard()
+	resp := bot.NewMessage(req.Chat.ID, s.format.FormatNow(ctx, wr))
+	resp.ReplyMarkup = s.botRepo.GetDaysOrHoursKeyboard()
 
-	_, err = s.botClient.Send(resp)
+	_, err = s.botCmd.Send(resp)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
 
-	err = s.locaRepo.SaveLocationName(ctx, req.From.ID, wr.Data[0].CityName)
+	err = s.locRepo.SaveLocationName(ctx, req.From.ID, wr.Data[0].CityName)
 	if err != nil {
 		log.WithError(err).Warnf("cannot save location '%s'", wr.Data[0].CityName)
 	}
@@ -236,12 +227,12 @@ func (s *MessageService) handlePeriod(ctx context.Context, req *bot.Message, byH
 	log := ctxlogrus.Extract(ctx)
 	log.Debugf("Handling '%s'", req.Text)
 
-	loc, err := s.locaRepo.GetUserRecentLocation(ctx, req.From.ID)
+	loc, err := s.locRepo.GetUserRecentLocation(ctx, req.From.ID)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
 
-	forecast, err := s.forecasts.GetForecast(ctx, loc, req.Text)
+	forecast, err := s.forecast.GetForecast(ctx, loc, req.Text)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
@@ -253,19 +244,19 @@ func (s *MessageService) handlePeriod(ctx context.Context, req *bot.Message, byH
 
 	var resp bot.MessageConfig
 	if byHours {
-		resp = bot.NewMessage(req.Chat.ID, s.formatter.FormatHours(ctx, timePeriodsEn[req.Text]))
-		resp.ReplyMarkup = s.botUIRepo.GetHoursKeyboard()
+		resp = bot.NewMessage(req.Chat.ID, s.format.FormatHours(ctx, wr, extractNumerals(req.Text)))
+		resp.ReplyMarkup = s.botRepo.GetHoursKeyboard()
 	} else {
-		resp = bot.NewMessage(req.Chat.ID, s.formatter.FormatDays(ctx, timePeriodsEn[req.Text]))
-		resp.ReplyMarkup = s.botUIRepo.GetDaysKeyboard()
+		resp = bot.NewMessage(req.Chat.ID, s.format.FormatDays(ctx, wr, extractNumerals(req.Text)))
+		resp.ReplyMarkup = s.botRepo.GetDaysKeyboard()
 	}
 
-	_, err = s.botClient.Send(resp)
+	_, err = s.botCmd.Send(resp)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
 
-	err = s.locaRepo.SaveLocationName(ctx, req.From.ID, wr.Data[0].CityName)
+	err = s.locRepo.SaveLocationName(ctx, req.From.ID, wr.Data[0].CityName)
 	if err != nil {
 		log.WithError(err).Warnf("cannot save location '%s'", wr.Data[0].CityName)
 	}
@@ -275,102 +266,100 @@ func (s *MessageService) handlePeriod(ctx context.Context, req *bot.Message, byH
 
 func (s *MessageService) handleLocationByCoordinates(ctx context.Context, req *bot.Message) error {
 	log := ctxlogrus.Extract(ctx)
-	log.Debugf("Handling '%s'", req.Text)
+	log.Debug("Handling location by coordinates")
 
-	loc, err := s.locaRepo.GetUserRecentLocation(ctx, req.From.ID)
+	err := s.locRepo.AddLocationByCoordinates(ctx, req.From.ID, req.Location)
 	if err != nil {
-		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
+		return errors.Wrap(err, types.ErrHandlingLocByCoords)
 	}
 
-	forecast, err := s.forecasts.GetForecast(ctx, loc, req.Text)
+	resp := bot.NewMessage(req.Chat.ID, commentsEn["CoordsAccepted"])
+	resp.ReplyMarkup = s.botRepo.GetDaysOrHoursKeyboard()
+
+	_, err = s.botCmd.Send(resp)
 	if err != nil {
-		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
-	}
-
-	wr, err := types.ParseWeather(forecast)
-	if err != nil {
-		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
-	}
-
-	resp := bot.NewMessage(req.Chat.ID, s.formatter.FormatDays(ctx, timePeriodsEn[req.Text]))
-	resp.ReplyMarkup = s.botUIRepo.GetDaysKeyboard()
-
-
-	_, err = s.botClient.Send(resp)
-	if err != nil {
-		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
-	}
-
-	err = s.locaRepo.SaveLocationName(ctx, req.From.ID, wr.Data[0].CityName)
-	if err != nil {
-		log.WithError(err).Warnf("cannot save location '%s'", wr.Data[0].CityName)
+		return errors.Wrap(err, types.ErrHandlingLocByCoords)
 	}
 
 	return nil
 }
 
+func (s *MessageService) handleWeatherElsewhere(ctx context.Context, req *bot.Message) error {
+	log := ctxlogrus.Extract(ctx)
+	log.Debugf("Handling '%s'", req.Text)
 
-func handleLocationByCoords(um *UserMessage) {
-	fmt.Println("EXECUTING: handleLocationByCoords")
-	addLocationByCoords(um.connection, um.update.Message)
-	msg := bot.NewMessage(um.update.Message.Chat.ID, commentsEn["CoordsAccepted"])
-	msg.ReplyMarkup = keyboards["period"]
-	_, err := um.bot.Send(msg)
+	resp := bot.NewMessage(req.Chat.ID, commentsEn["DiffPlaceAccepted"])
+	resp.ReplyMarkup = bot.ReplyKeyboardHide{HideKeyboard: true}
+
+	_, err := s.botCmd.Send(resp)
 	if err != nil {
-		err = errors.Wrap(err, "Unable to Send message")
-		fmt.Println(err)
+		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
+
+	return nil
 }
 
-func handleWeatherElsewhere(um *UserMessage) {
-	fmt.Println("EXECUTING: handleWeatherElsewhere")
-	msg := bot.NewMessage(um.update.Message.Chat.ID, commentsEn["DiffPlaceAccepted"])
-	msg.ReplyMarkup = bot.ReplyKeyboardHide{HideKeyboard: true}
-	_, err := um.bot.Send(msg)
-	if err != nil {
-		err = errors.Wrap(err, "Unable to Send message")
-		fmt.Println(err)
-	}
-}
+func (s *MessageService) handleLocationByText(ctx context.Context, req *bot.Message) error {
+	log := ctxlogrus.Extract(ctx)
+	log.Debugf("Handling location '%s' by text ", req.Text)
 
-func handleLocationByText(um *UserMessage) {
-	fmt.Println("EXECUTING: handleLocationByText")
-	loc := retrieveCoordinates(um.connection, um.update.Message.Text)
-	msg := bot.NewMessage(um.update.Message.Chat.ID, commentsEn["TryAgain"])
-	msg.ReplyMarkup = keyboards["back"]
-	if loc.Longitude != 0 && loc.Latitude != 0 { //this one makes it impossible to use bot from one place in Ghana
-		um.update.Message.Location = &loc
-		addLocationByCoords(um.connection, um.update.Message)
-		msg = bot.NewMessage(um.update.Message.Chat.ID, commentsEn["CoordsAccepted"])
-		msg.ReplyMarkup = keyboards["period"]
-	}
-	_, err := um.bot.Send(msg)
+	loc, err := s.locRepo.GetCoordinatesByCityName(ctx, req.Text)
 	if err != nil {
-		err = errors.Wrap(err, "Unable to Send message")
-		fmt.Println(err)
+		return errors.Wrapf(err, types.ErrHandlingLocByText, req.Text)
 	}
-}
 
-func handleUnknown(um *UserMessage) {
-	fmt.Println("EXECUTING: handleUnknown")
-	msg := bot.NewMessage(um.update.Message.Chat.ID, commentsEn["Unknown"])
-	msg.ReplyMarkup = keyboards["main"]
-	_, err := um.bot.Send(msg)
-	if err != nil {
-		err = errors.Wrap(err, "Unable to Send message")
-		fmt.Println(err)
-	}
-}
-func handleEmpty(um *UserMessage) {
-	fmt.Println("EXECUTING: handleEmpty")
-	if um.update.Message.Location != nil {
-		handleLocationByCoords(um)
+	var resp bot.MessageConfig
+	if loc.Latitude == 0 && loc.Longitude == 0 {
+		resp = bot.NewMessage(req.Chat.ID, commentsEn["TryAgain"])
+		resp.ReplyMarkup = s.botRepo.GetBackToMainMenuKeyboard()
 	} else {
-		handleUnknown(um)
+		resp = bot.NewMessage(req.Chat.ID, commentsEn["CoordsAccepted"])
+		resp.ReplyMarkup = s.botRepo.GetDaysOrHoursKeyboard()
 	}
+
+	err = s.locRepo.AddLocationByCoordinates(ctx, req.From.ID, &loc)
+	if err != nil {
+		return errors.Wrapf(err, types.ErrHandlingLocByText, req.Text)
+	}
+
+	_, err = s.botCmd.Send(resp)
+	if err != nil {
+		return errors.Wrapf(err, types.ErrHandlingLocByText, req.Text)
+	}
+
+	return nil
+}
+
+func (s *MessageService) handleUnknown(ctx context.Context, req *bot.Message) error {
+	ctxlogrus.Extract(ctx).Debugf("Handling '%s'", req.Text)
+
+	resp := bot.NewMessage(req.Chat.ID, commentsEn["Unknown"])
+	resp.ReplyMarkup = s.botRepo.GetMainMenuKeyboard()
+
+	_, err := s.botCmd.Send(resp)
+	if err != nil {
+		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
+	}
+
+	return nil
+}
+
+func (s *MessageService) handleEmptyMessage(ctx context.Context, req *bot.Message) error {
+	ctxlogrus.Extract(ctx).Debugf("Handling empty message")
+
+	if req.Location != nil {
+		return s.handleLocationByCoordinates(ctx, req)
+	}
+
+	return s.handleUnknown(ctx, req)
 }
 
 // Picks a random saying.
 func pickASaying(sayings []string) string {
 	return sayings[rand.Intn(len(sayings))]
+}
+
+func extractNumerals(s string) int {
+	num, _ := strconv.Atoi(strings.Split(s, " ")[0])
+	return num
 }

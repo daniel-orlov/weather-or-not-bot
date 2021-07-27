@@ -64,17 +64,3 @@ var commentsEn = map[string]string{
 	"96Hours":           "96 hours",
 	"120Hours":          "120 hours",
 }
-
-// TODO split with space and only use the first part
-var timePeriodsEn = map[string]int{
-	"3 days":    3,
-	"5 days":    5,
-	"7 days":    7,
-	"10 days":   10,
-	"16 days":   16,
-	"24 hours":  24,
-	"48 hours":  48,
-	"72 hours":  72,
-	"96 hours":  96,
-	"120 hours": 120,
-}

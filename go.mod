@@ -3,11 +3,11 @@ module weather-or-not-bot
 go 1.16
 
 require (
-	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/jackc/pgx/v4 v4.12.0
 	github.com/jmoiron/sqlx v1.3.4
+	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/pflag v1.0.5

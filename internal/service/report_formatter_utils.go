@@ -65,15 +65,17 @@ const (
 	SunSunset  = "Sunset"
 
 	WeatherCityPrefix = "Weather in"
+
+	Day      = "d"
+	UVPrefix = "UV Index"
 )
 
 type StatFormatter func(s *types.Stat) string
 
 // addNewLine adds a new line
 func addNewLine(s *types.Stat) string {
-	// TODO replace all of this with string buffer
 	_ = s
-	return "\n"
+	return NewLine
 }
 
 // formatAQI formats AQI into a string, adding an emoji and a comment.
@@ -87,27 +89,21 @@ func formatAQI(s *types.Stat) string {
 	case s.IndexAirQuality <= AQIModerateThreshold:
 		comment = AQIGood
 		emoji = types.CheckMarkEmoji
-		break
 	case s.IndexAirQuality <= AQIUnhealthyForSensitiveThreshold:
 		comment = AQIModerate
 		emoji = types.CheckMarkEmoji
-		break
 	case s.IndexAirQuality <= AQIUnhealthyThreshold:
 		comment = AQIUnhealthyForSensitive
 		emoji = types.SmokingEmoji
-		break
 	case s.IndexAirQuality <= AQIVeryUnhealthyThreshold:
 		comment = AQIUnhealthy
 		emoji = types.WarningEmoji
-		break
 	case s.IndexAirQuality <= AQIHazardousThreshold:
 		comment = AQIVeryUnhealthy
 		emoji = types.WarningEmoji
-		break
 	case s.IndexAirQuality <= AQIUpperBound:
 		comment = AQIHazardous
 		emoji = types.CrossEmoji
-		break
 	default:
 		comment = AQIUnknown
 		emoji = types.QuestionMarkEmoji
@@ -201,6 +197,7 @@ func formatTemperatureSmall(s *types.Stat) string {
 
 // formatDate formats date into a string.
 func formatDate(s *types.Stat) string {
+	// TODO format date properly
 	monthCode := s.DateTime[5:7]
 	month := monthsEn[monthCode]
 	date := s.DateTime[8:10]
@@ -212,13 +209,9 @@ func formatDate(s *types.Stat) string {
 
 // formatTime formats time into a string.
 func formatTime(s *types.Stat) string {
+	// TODO format time properly
 	return fmt.Sprintf("%vh ", s.DateTime[11:])
 }
-
-const (
-	Day      = "d"
-	UVPrefix = "UV Index"
-)
 
 // formatUv formats UV into a string, adding an emoji and a piece of advice.
 func formatUv(s *types.Stat) string {

@@ -1,11 +1,7 @@
 package types
 
-import "github.com/pkg/errors"
-
-var (
-	Err = errors.New("some new error")
-)
-
 const (
-	ErrOnHandling = "cannot handle '%s'"
+	ErrOnHandling          = "cannot handle '%s'"
+	ErrHandlingLocByCoords = "cannot handle location by coordinates"
+	ErrHandlingLocByText   = "cannot handle location '%s' by text"
 )

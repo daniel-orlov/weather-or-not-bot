@@ -14,6 +14,10 @@ import (
 type ForecastClient struct {
 }
 
+func NewForecastClient() *ForecastClient {
+	return &ForecastClient{}
+}
+
 // TODO make this pretty and refactor
 
 func (c *ForecastClient) GetForecast(ctx context.Context, loc *types.UserCoordinates, period string) ([]byte, error) {

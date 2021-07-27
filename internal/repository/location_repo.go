@@ -84,3 +84,21 @@ func (r *LocationRepo) GetCoordinatesByCityName(ctx context.Context, locationNam
 
 	return loc, nil
 }
+
+const AddLocationByCoordinatesQuery = `
+	INSERT INTO locations (user, latitude, longitude)
+		VALUES ($1, $2, $3);
+`
+
+func (r *LocationRepo) AddLocationByCoordinates(ctx context.Context, userID int, loc *bot.Location) error {
+	log := ctxlogrus.Extract(ctx)
+	log.Debug("Adding the location by coordinates")
+
+	_, err := r.db.ExecContext(ctx, AddLocationByCoordinatesQuery, userID, loc.Latitude, loc.Longitude)
+	if err != nil {
+		return errors.Wrap(err, "cannot add location by coordinates")
+	}
+
+	log.Trace("Successfully added location by coordinates")
+	return nil
+}
