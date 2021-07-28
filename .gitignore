@@ -19,3 +19,6 @@
 
 # Binary
 weather-or-not-bot
+
+# Dev scripts
+set_env.sh

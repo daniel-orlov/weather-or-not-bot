@@ -8,7 +8,7 @@ import (
 )
 
 type MessageService interface {
-	HandleNewMessage(ctx context.Context, msg bot.Update) error
+	HandleNewMessage(ctx context.Context, msg *bot.Update) error
 }
 
 type UpdatesHandler struct {
@@ -22,9 +22,11 @@ func NewUpdatesHandler(svc MessageService, upd bot.UpdatesChannel) *UpdatesHandl
 
 func (h *UpdatesHandler) Handle(ctx context.Context) {
 	log := ctxlogrus.Extract(ctx)
+	log.Info("Starting handling messages from users")
 
+	log.Infof("Len of chan upd: %d", len(h.upd))
 	for update := range h.upd {
-		err := h.svc.HandleNewMessage(ctx, update)
+		err := h.svc.HandleNewMessage(ctx, &update)
 		if err != nil {
 			log.WithError(err).Warn("cannot handle user message")
 		}

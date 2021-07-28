@@ -15,10 +15,11 @@ import (
 
 func init() {
 	pflag.String("bot_token", `fake_token`, "Token to access Telegram Bot API")
-	pflag.String("port", "8080", "Port to listen to")
+	pflag.String("port", ":8080", "Port to listen to")
+	pflag.Bool("bot_debug_on", true, "Turn on bot debug")
 
-	pflag.String("webhook", "", "Webhook URL to get weather forecasts from")
-	pflag.String("weather_api_key", "", "Client's key to access weather API")
+	pflag.String("webhook", "https://weatherbit-v1-mashape.p.rapidapi.com/", "Webhook URL to get weather forecasts from")
+	pflag.String("weather_api_key", `fake_key`, "Client's key to access weather API")
 
 	pflag.String("language", "", "Service language")
 
@@ -37,8 +38,8 @@ func main() {
 	defer db.Close()
 
 	// Initiating all repositories.
-	userRepo := repository.NewUserDataRepo(db)
-	locaRepo := repository.NewLocationRepo(db)
+	usrRepo := repository.NewUserDataRepo(db)
+	locRepo := repository.NewLocationRepo(db)
 	botUIRepo := repository.NewBotUIRepo()
 
 	// Establishing client connections.
@@ -48,7 +49,7 @@ func main() {
 	formatter := service.NewFormatter()
 
 	// Instantiating main service.
-	svc := service.NewMessageService(botClient, userRepo, botUIRepo, locaRepo, forecastClient, formatter)
+	svc := service.NewMessageService(botClient, usrRepo, botUIRepo, locRepo, forecastClient, formatter)
 
 	// Launching a server.
 	go func() {
@@ -57,7 +58,7 @@ func main() {
 			logrus.WithError(err).Fatal("Cannot listen and serve")
 		}
 	}()
-	logrus.Infof("start listen on port %s", viper.GetString("port"))
+	logrus.Infof("Start listen on port %s", viper.GetString("port"))
 
 	// Handling messages from user.
 	updatesHandler := transport.NewUpdatesHandler(svc, botClient.ListenForWebhook("/"))
