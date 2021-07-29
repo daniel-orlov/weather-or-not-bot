@@ -1,7 +1,8 @@
 package types
 
+// UserCoordinates contains user location data.
 type UserCoordinates struct {
-	LocationID int     `db:"id"`
-	Latitude   float64 `db:"latitude"`
-	Longitude  float64 `db:"longitude"`
+	LocationID int    `db:"id"`
+	Latitude   string `db:"latitude"`
+	Longitude  string `db:"longitude"`
 }

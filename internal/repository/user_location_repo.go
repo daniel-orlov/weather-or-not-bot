@@ -7,6 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	bot "gopkg.in/telegram-bot-api.v4"
 	"weather-or-not-bot/internal/types"
 )
 
@@ -19,25 +20,27 @@ func NewUserLocationRepo(db *sqlx.DB) *UserLocationRepo {
 }
 
 const addUserLocationByCoordinatesQuery = `
-	INSERT INTO locations (userID, latitude, longitude)
-	VALUES ($1, $2, $3);
+	INSERT INTO locations (user_id, latitude, longitude)
+		VALUES ($1, $2, $3);
 `
 
-func (r UserLocationRepo) AddUserLocationByCoordinates(ctx context.Context, userID int, lat, long float64) error {
+func (r *UserLocationRepo) AddUserLocationByCoordinates(ctx context.Context, userID int, loc *bot.Location) error {
 	log := ctxlogrus.Extract(ctx).WithFields(logrus.Fields{
 		"user_id": userID,
-		"lat":     lat,
-		"long":    long,
+		"lat":     loc.Latitude,
+		"long":    loc.Longitude,
 	})
-	log.Debug("adding location to db")
+	log.Debug("Adding the location by coordinates")
 
 	_, err := r.db.ExecContext(ctx, addUserLocationByCoordinatesQuery, userID,
-		fmt.Sprintf("%v", lat),
-		fmt.Sprintf("%v", long),
+		fmt.Sprintf("%f", loc.Latitude),
+		fmt.Sprintf("%f", loc.Longitude),
 	)
 	if err != nil {
 		return errors.Wrap(err, "cannot add location by coordinates")
 	}
+
+	log.Debug("Successfully added location by coordinates")
 
 	return nil
 }
@@ -50,17 +53,45 @@ const getUserRecentLocationQuery = `
 	LIMIT 1;
 `
 
-func (r UserLocationRepo) GetUserRecentLocation(ctx context.Context, userID int) (*types.UserCoordinates, error) {
+func (r *UserLocationRepo) GetUserRecentLocation(ctx context.Context, userID int) (*types.UserCoordinates, error) {
 	log := ctxlogrus.Extract(ctx).WithFields(logrus.Fields{
 		"user_id": userID,
 	})
 	log.Debug("getting user's recent coordinates from db")
 
 	userLocation := types.UserCoordinates{}
-	err := r.db.GetContext(ctx, &userLocation, getUserRecentLocationQuery)
+	err := r.db.GetContext(ctx, &userLocation, getUserRecentLocationQuery, userID)
 	if err != nil {
 		return &userLocation, errors.Wrap(err, "cannot get user's recent location")
 	}
 
 	return &userLocation, nil
+}
+
+const saveLocationNameQuery = `
+	UPDATE locations
+	SET location_name = $1
+	WHERE id = $2;
+`
+
+func (r *UserLocationRepo) SaveUserLocationName(ctx context.Context, userID int, locationName string) error {
+	log := ctxlogrus.Extract(ctx).WithFields(logrus.Fields{
+		"user_id":       userID,
+		"location_name": locationName,
+	})
+	log.Debug("saving the name of the location")
+
+	// TODO get rid of two queries
+	coord, err := r.GetUserRecentLocation(ctx, userID)
+	if err != nil {
+		return errors.Wrap(err, "cannot save location name")
+	}
+
+	_, err = r.db.ExecContext(ctx, saveLocationNameQuery, locationName, coord.LocationID)
+	if err != nil {
+		return errors.Wrap(err, "cannot save location name")
+	}
+
+	log.Debug("successfully saved the location name")
+	return nil
 }

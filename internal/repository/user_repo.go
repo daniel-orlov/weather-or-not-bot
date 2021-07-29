@@ -20,7 +20,7 @@ func NewUserDataRepo(db *sqlx.DB) *UserDataRepo {
 }
 
 const addUserIfNotExistsQuery = `
-	INSERT INTO users (user_id, username, first_name, last_name, language, is_bot)
+	INSERT INTO users (user_id, username, first_name, last_name, language_code, is_bot)
 	VALUES ($1, $2, $3, $4, $5, $6)
 	ON CONFLICT (user_id) DO NOTHING;
 `
@@ -30,11 +30,11 @@ func (r UserDataRepo) AddUserIfNotExists(ctx context.Context, user *bot.User) er
 		"username": user.UserName,
 		"user_id":  user.ID,
 	})
-	log.Debug("adding user to db")
+	log.Debug("Adding user to db")
 
 	_, err := r.db.ExecContext(ctx, addUserIfNotExistsQuery, user.ID, user.UserName, user.FirstName, user.LastName, user.LanguageCode, user.IsBot)
 	if errors.Is(err, sql.ErrNoRows) {
-		log.Trace("user already exists")
+		log.Debug("User already exists")
 		return nil
 	}
 

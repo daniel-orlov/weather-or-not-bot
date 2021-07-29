@@ -1,5 +1,7 @@
 package service
 
+// TODO move this data to separate repo
+
 var sayingsEn = []string{
 	"Let's see weather or not you should leave umbrella at home.",
 	"The best and the worst thing about the weather is that it changes.",

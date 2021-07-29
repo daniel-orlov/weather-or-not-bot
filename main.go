@@ -5,10 +5,9 @@ import (
 	"weather-or-not-bot/internal/repository"
 	"weather-or-not-bot/internal/service"
 	"weather-or-not-bot/internal/transport"
-	"weather-or-not-bot/utils"
+	"weather-or-not-bot/internal/utils"
 
 	"github.com/sirupsen/logrus"
-
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -18,7 +17,7 @@ func init() {
 	pflag.String("port", ":8080", "Port to listen to")
 	pflag.Bool("bot_debug_on", true, "Turn on bot debug")
 
-	pflag.String("webhook", "https://weatherbit-v1-mashape.p.rapidapi.com/", "Webhook URL to get weather forecasts from")
+	pflag.String("webhook", "https://db1202f41701.ngrok.io", "Webhook URL to get updates from bot")
 	pflag.String("weather_api_key", `fake_key`, "Client's key to access weather API")
 
 	pflag.String("language", "", "Service language")
@@ -37,19 +36,26 @@ func main() {
 	db := utils.NewDBFromEnv()
 	defer db.Close()
 
+	// Running init SQL
+	err := utils.RunInitMigration(ctx, db)
+	if err != nil {
+		logrus.WithError(err).Fatal("Cannot listen and serve")
+	}
+
 	// Initiating all repositories.
 	usrRepo := repository.NewUserDataRepo(db)
 	locRepo := repository.NewLocationRepo(db)
+	usrLocRepo := repository.NewUserLocationRepo(db)
 	botUIRepo := repository.NewBotUIRepo()
 
 	// Establishing client connections.
-	botClient := utils.NewBotApi()
+	botClient := service.NewBotCmd(utils.NewBotApi())
 	forecastClient := repository.NewForecastClient()
 
 	formatter := service.NewFormatter()
 
 	// Instantiating main service.
-	svc := service.NewMessageService(botClient, usrRepo, botUIRepo, locRepo, forecastClient, formatter)
+	svc := service.NewMessageService(botClient, forecastClient, formatter, botUIRepo, locRepo, usrLocRepo, usrRepo)
 
 	// Launching a server.
 	go func() {
@@ -60,7 +66,7 @@ func main() {
 	}()
 	logrus.Infof("Start listen on port %s", viper.GetString("port"))
 
-	// Handling messages from user.
+	//Handling messages from user.
 	updatesHandler := transport.NewUpdatesHandler(svc, botClient.ListenForWebhook("/"))
-	updatesHandler.Handle(ctx)
+	updatesHandler.HandleUpdates(ctx)
 }

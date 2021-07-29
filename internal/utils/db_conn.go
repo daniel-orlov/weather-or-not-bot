@@ -31,6 +31,7 @@ func init() {
 	sql.Register("instrumented-postgres", stdlib.GetDefaultDriver())
 }
 
+// NewDBFromEnv establishes a new db connection and returns a wrapper.
 func NewDBFromEnv() *sqlx.DB {
 	cfg := getDataFromEnv()
 	logrus.WithFields(logrus.Fields{

@@ -5,12 +5,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+//
 type FullWeatherReport struct {
 	CityName string  `json:"city_name"`
 	Data     []*Stat `json:"data"`
-	Count    int     `json:"count"`
+	Count    int     `json:"count"` //TODO check if this field is useful, rm if not
 }
 
+// Stat carries weather report data for a certain location at a specific time.
 type Stat struct {
 	PartOfDay        string  `json:"pod"`
 	CityName         string  `json:"city_name"`
@@ -33,6 +35,7 @@ type Stat struct {
 	IndexAirQuality  int `json:"aqi"`
 }
 
+// Weather provides a brief summary of the weather conditions.
 type Weather struct {
 	Description string `json:"description"`
 	Code        int    `json:"code"`

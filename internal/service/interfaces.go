@@ -6,6 +6,15 @@ import (
 	"weather-or-not-bot/internal/types"
 )
 
+type BotClient interface {
+	Send(msg bot.MessageConfig) (bot.Message, error)
+	ListenForWebhook(webhook string) bot.UpdatesChannel
+}
+
+type ForecastClient interface {
+	GetForecast(ctx context.Context, loc *types.UserCoordinates, period string) ([]byte, error)
+}
+
 type UserDataRepo interface {
 	AddUserIfNotExists(ctx context.Context, user *bot.User) error
 }
@@ -19,14 +28,13 @@ type BotUIRepo interface {
 }
 
 type LocationRepo interface {
-	GetUserRecentLocation(ctx context.Context, userID int) (*types.UserCoordinates, error)
-	SaveLocationName(ctx context.Context, userID int, locationName string) error
 	GetCoordinatesByCityName(ctx context.Context, locationName string) (bot.Location, error)
-	AddLocationByCoordinates(ctx context.Context, userID int, loc *bot.Location) error
 }
 
-type ForecastClient interface {
-	GetForecast(ctx context.Context, loc *types.UserCoordinates, period string) ([]byte, error)
+type UserLocationRepo interface {
+	GetUserRecentLocation(ctx context.Context, userID int) (*types.UserCoordinates, error)
+	SaveUserLocationName(ctx context.Context, userID int, locationName string) error
+	AddUserLocationByCoordinates(ctx context.Context, userID int, loc *bot.Location) error
 }
 
 type ReportFormatter interface {

@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	// Constants unlikely to be changed
+	// Constants unlikely to be changed.
 	AQIModerateThreshold              = 50
 	AQIUnhealthyForSensitiveThreshold = 100
 	AQIUnhealthyThreshold             = 150
@@ -41,8 +41,8 @@ const (
 
 	NewLine = "\n"
 
-	// Language specific strings, subject to localization
-	// TODO localize to other languages
+	// Language specific strings, subject to localization.
+	// TODO localize to other languages and move out to a repo
 	AQIPrefix                = "Air Quality Index"
 	AQIUnknown               = "Unknown"
 	AQIGood                  = "Good"
@@ -160,12 +160,12 @@ func formatSun(s *types.Stat) string {
 func formatTemperatureAndFeels(s *types.Stat) string {
 	temp := fmt.Sprint(s.Temperature)
 	if s.Temperature > Zero {
-		temp = fmt.Sprintf("+%f", s.Temperature)
+		temp = fmt.Sprintf("+%v", s.Temperature)
 	}
 
 	feels := fmt.Sprint(s.FeelsLikeTemp)
 	if s.FeelsLikeTemp > Zero {
-		feels = fmt.Sprintf("+%f", s.FeelsLikeTemp)
+		feels = fmt.Sprintf("+%v", s.FeelsLikeTemp)
 	}
 
 	return fmt.Sprintf("%c %s (%s) ", types.ThermometerEmoji, temp, feels)
@@ -175,12 +175,12 @@ func formatTemperatureAndFeels(s *types.Stat) string {
 func formatTemperatureLowHigh(s *types.Stat) string {
 	tempLow := fmt.Sprint(s.LowTemp)
 	if s.LowTemp > 0 {
-		tempLow = fmt.Sprintf("+%f", s.LowTemp)
+		tempLow = fmt.Sprintf("+%v", s.LowTemp)
 	}
 
 	tempHigh := fmt.Sprint(s.HighTemp)
 	if s.HighTemp > 0 {
-		tempHigh = fmt.Sprintf("+%f", s.HighTemp)
+		tempHigh = fmt.Sprintf("+%v", s.HighTemp)
 	}
 
 	return fmt.Sprintf("%c %v %c %v ", types.GoingUpEmoji, tempHigh, types.GoingDownEmoji, tempLow)
@@ -189,10 +189,10 @@ func formatTemperatureLowHigh(s *types.Stat) string {
 // formatTemperatureSmall formats Temperature into a string, adding a sign.
 func formatTemperatureSmall(s *types.Stat) string {
 	if s.Temperature > 0 {
-		return fmt.Sprintf("+%f ", s.Temperature)
+		return fmt.Sprintf("+%v ", s.Temperature)
 	}
 
-	return fmt.Sprintf("%f ", s.Temperature)
+	return fmt.Sprintf("%v ", s.Temperature)
 }
 
 // formatDate formats date into a string.

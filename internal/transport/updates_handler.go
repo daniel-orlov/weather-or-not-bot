@@ -20,11 +20,11 @@ func NewUpdatesHandler(svc MessageService, upd bot.UpdatesChannel) *UpdatesHandl
 	return &UpdatesHandler{svc: svc, upd: upd}
 }
 
-func (h *UpdatesHandler) Handle(ctx context.Context) {
+// HandleUpdates reads updates from bot's UpdateChannel and handles them.
+func (h *UpdatesHandler) HandleUpdates(ctx context.Context) {
 	log := ctxlogrus.Extract(ctx)
 	log.Info("Starting handling messages from users")
 
-	log.Infof("Len of chan upd: %d", len(h.upd))
 	for update := range h.upd {
 		err := h.svc.HandleNewMessage(ctx, &update)
 		if err != nil {

@@ -75,9 +75,7 @@ func (f *Formatter) FormatHours(ctx context.Context, report *types.FullWeatherRe
 			buf.WriteString(fmt.Sprintln(currentDate))
 		}
 
-		for i := range lineFormatterHours {
-			buf.WriteString(formatHour(report.Data[i]))
-		}
+		buf.WriteString(formatHour(report.Data[i]))
 
 		lastWeatherCode = report.Data[i].Code
 		prevDate = currentDate
@@ -101,7 +99,7 @@ func (f *Formatter) FormatDays(ctx context.Context, report *types.FullWeatherRep
 
 func formatHour(s *types.Stat) string {
 	var buf bytes.Buffer
-	for i := range lineFormatterDays {
+	for i := range lineFormatterHours {
 		buf.WriteString(lineFormatterHours[i](s))
 	}
 

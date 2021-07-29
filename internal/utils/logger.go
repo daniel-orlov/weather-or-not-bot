@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// NewLogger creates the main context and injects logger into it.
 func NewLogger() (context.Context, context.CancelFunc) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	ctx = ctxlogrus.ToContext(ctx, logrus.NewEntry(logrus.StandardLogger()))
