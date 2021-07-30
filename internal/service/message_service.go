@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -121,8 +122,7 @@ func (s *MessageService) handleStart(ctx context.Context, req *bot.Message) erro
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
 
-	// TODO create func greet()
-	resp := bot.NewMessage(req.Chat.ID, commentsEn["DefaultMessage"]+"\n"+pickASaying(sayingsEn))
+	resp := bot.NewMessage(req.Chat.ID, fmt.Sprintf("%s\n%s", commentsEn["DefaultMessage"], pickASaying(req.MessageID, sayingsEn)))
 	resp.ReplyMarkup = s.botRepo.GetMainMenuKeyboard()
 
 	_, err = s.botCmd.Send(resp)
@@ -353,10 +353,12 @@ func (s *MessageService) handleEmptyMessage(ctx context.Context, req *bot.Messag
 }
 
 // Picks a random saying.
-func pickASaying(sayings []string) string {
+func pickASaying(seed int, sayings []string) string {
+	rand.Seed(int64(seed))
 	return sayings[rand.Intn(len(sayings))]
 }
 
+// Extract numeric part of the request. No error handling since string s is deterministic.
 func extractNumerals(s string) int {
 	num, _ := strconv.Atoi(strings.Split(s, " ")[0])
 	return num

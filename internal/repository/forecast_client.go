@@ -24,12 +24,17 @@ const (
 	HostHeader = "weatherbit-v1-mashape.p.rapidapi.com"
 )
 
-func (c *ForecastClient) GetForecast(ctx context.Context, loc *types.UserCoordinates, period string) ([]byte, error) {
+func (c *ForecastClient) GetForecast(ctx context.Context, loc *types.UserCoordinates, period string) (*types.FullWeatherReport, error) {
 	log := ctxlogrus.Extract(ctx).WithFields(logrus.Fields{
 		"period": period,
 	})
 	log.Debug("Getting forecast data from a third-party provider")
 
+	rawWR, err := c.getForecast(loc, period)
+
+
+}
+func (c *ForecastClient) getForecast(loc *types.UserCoordinates, period string) ([]byte, error) {
 	url := fmt.Sprintf(
 		"%v%vlang=%v&lat=%v&lon=%v", BaseURL, forecasts[period], viper.GetString("language"), loc.Latitude, loc.Longitude,
 	)
@@ -51,8 +56,6 @@ func (c *ForecastClient) GetForecast(ctx context.Context, loc *types.UserCoordin
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot read from response body")
 	}
-
-	log.Tracef("Full response body: %+v", body)
 
 	return body, nil
 }
