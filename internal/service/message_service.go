@@ -15,13 +15,13 @@ import (
 )
 
 type MessageService struct {
-	botCmd   BotClient
-	forecast ForecastClient
-	format   ReportFormatter
-	botRepo  BotUIRepo
-	locRepo  LocationRepo
+	botCmd     BotClient
+	forecast   ForecastClient
+	format     ReportFormatter
+	botRepo    BotUIRepo
+	locRepo    LocationRepo
 	usrLocRepo UserLocationRepo
-	usrRepo  UserDataRepo
+	usrRepo    UserDataRepo
 }
 
 func NewMessageService(botCmd BotClient, forecast ForecastClient, format ReportFormatter, botRepo BotUIRepo, locRepo LocationRepo, usrLocRepo UserLocationRepo, usrRepo UserDataRepo) *MessageService {
@@ -198,12 +198,7 @@ func (s *MessageService) handleNow(ctx context.Context, req *bot.Message) error 
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
 
-	forecast, err := s.forecast.GetForecast(ctx, loc, req.Text)
-	if err != nil {
-		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
-	}
-
-	wr, err := types.ParseWeather(forecast)
+	wr, err := s.forecast.GetForecast(ctx, loc, req.Text)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
@@ -233,12 +228,7 @@ func (s *MessageService) handlePeriod(ctx context.Context, req *bot.Message, byH
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
 
-	forecast, err := s.forecast.GetForecast(ctx, loc, req.Text)
-	if err != nil {
-		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
-	}
-
-	wr, err := types.ParseWeather(forecast)
+	wr, err := s.forecast.GetForecast(ctx, loc, req.Text)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}
@@ -315,7 +305,7 @@ func (s *MessageService) handleLocationByText(ctx context.Context, req *bot.Mess
 		resp.ReplyMarkup = s.botRepo.GetDaysOrHoursKeyboard()
 	}
 
-	err = s.usrLocRepo.AddUserLocationByCoordinates(ctx, req.From.ID, &loc)
+	err = s.usrLocRepo.AddUserLocationByCoordinates(ctx, req.From.ID, loc)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrHandlingLocByText, req.Text)
 	}
@@ -329,12 +319,19 @@ func (s *MessageService) handleLocationByText(ctx context.Context, req *bot.Mess
 }
 
 func (s *MessageService) handleUnknown(ctx context.Context, req *bot.Message) error {
-	ctxlogrus.Extract(ctx).Debugf("Handling '%s'", req.Text)
+	log := ctxlogrus.Extract(ctx)
+	log.Debugf("Handling '%s'", req.Text)
 
+	err := s.handleLocationByText(ctx, req)
+	if err == nil {
+		return nil
+	}
+
+	log.Debug("Location unknown, handling like any unknown message")
 	resp := bot.NewMessage(req.Chat.ID, commentsEn["Unknown"])
 	resp.ReplyMarkup = s.botRepo.GetMainMenuKeyboard()
 
-	_, err := s.botCmd.Send(resp)
+	_, err = s.botCmd.Send(resp)
 	if err != nil {
 		return errors.Wrapf(err, types.ErrOnHandling, req.Text)
 	}

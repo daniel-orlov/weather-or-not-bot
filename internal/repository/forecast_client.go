@@ -20,7 +20,7 @@ func NewForecastClient() *ForecastClient {
 }
 
 const (
-	BaseURL = "https://weatherbit-v1-mashape.p.rapidapi.com/"
+	BaseURL    = "https://weatherbit-v1-mashape.p.rapidapi.com/"
 	HostHeader = "weatherbit-v1-mashape.p.rapidapi.com"
 )
 
@@ -31,8 +31,11 @@ func (c *ForecastClient) GetForecast(ctx context.Context, loc *types.UserCoordin
 	log.Debug("Getting forecast data from a third-party provider")
 
 	rawWR, err := c.getForecast(loc, period)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot get forecast")
+	}
 
-
+	return types.ParseWeather(rawWR)
 }
 func (c *ForecastClient) getForecast(loc *types.UserCoordinates, period string) ([]byte, error) {
 	url := fmt.Sprintf(

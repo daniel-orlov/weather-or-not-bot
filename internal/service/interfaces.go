@@ -12,7 +12,7 @@ type BotClient interface {
 }
 
 type ForecastClient interface {
-	GetForecast(ctx context.Context, loc *types.UserCoordinates, period string) ([]byte, error)
+	GetForecast(ctx context.Context, loc *types.UserCoordinates, period string) (*types.FullWeatherReport, error)
 }
 
 type UserDataRepo interface {
@@ -28,7 +28,7 @@ type BotUIRepo interface {
 }
 
 type LocationRepo interface {
-	GetCoordinatesByCityName(ctx context.Context, locationName string) (bot.Location, error)
+	GetCoordinatesByCityName(ctx context.Context, locationName string) (*bot.Location, error)
 }
 
 type UserLocationRepo interface {

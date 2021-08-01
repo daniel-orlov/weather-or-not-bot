@@ -27,7 +27,7 @@ const getCoordinatesByCityNameQuery = `
 	WHERE city = $1;
 	`
 
-func (r *LocationRepo) GetCoordinatesByCityName(ctx context.Context, locationName string) (bot.Location, error) {
+func (r *LocationRepo) GetCoordinatesByCityName(ctx context.Context, locationName string) (*bot.Location, error) {
 	log := ctxlogrus.Extract(ctx).WithFields(logrus.Fields{
 		"location_name": locationName,
 	})
@@ -36,8 +36,8 @@ func (r *LocationRepo) GetCoordinatesByCityName(ctx context.Context, locationNam
 	loc := bot.Location{}
 	err := r.db.GetContext(ctx, &loc, getCoordinatesByCityNameQuery)
 	if err != nil {
-		return loc, errors.Wrap(err, "cannot get coordinates by location name")
+		return &loc, errors.Wrap(err, "cannot get coordinates by location name")
 	}
 
-	return loc, nil
+	return &loc, nil
 }

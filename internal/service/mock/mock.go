@@ -10,7 +10,7 @@ import (
 	types "weather-or-not-bot/internal/types"
 
 	gomock "github.com/golang/mock/gomock"
-	telegram_bot_api_v4 "gopkg.in/telegram-bot-api.v4"
+	tgbotapi "gopkg.in/telegram-bot-api.v4"
 )
 
 // MockBotClient is a mock of BotClient interface.
@@ -37,10 +37,10 @@ func (m *MockBotClient) EXPECT() *MockBotClientMockRecorder {
 }
 
 // ListenForWebhook mocks base method.
-func (m *MockBotClient) ListenForWebhook(webhook string) telegram_bot_api_v4.UpdatesChannel {
+func (m *MockBotClient) ListenForWebhook(webhook string) tgbotapi.UpdatesChannel {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListenForWebhook", webhook)
-	ret0, _ := ret[0].(telegram_bot_api_v4.UpdatesChannel)
+	ret0, _ := ret[0].(tgbotapi.UpdatesChannel)
 	return ret0
 }
 
@@ -51,10 +51,10 @@ func (mr *MockBotClientMockRecorder) ListenForWebhook(webhook interface{}) *gomo
 }
 
 // Send mocks base method.
-func (m *MockBotClient) Send(msg telegram_bot_api_v4.MessageConfig) (telegram_bot_api_v4.Message, error) {
+func (m *MockBotClient) Send(msg tgbotapi.MessageConfig) (tgbotapi.Message, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Send", msg)
-	ret0, _ := ret[0].(telegram_bot_api_v4.Message)
+	ret0, _ := ret[0].(tgbotapi.Message)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -89,10 +89,10 @@ func (m *MockForecastClient) EXPECT() *MockForecastClientMockRecorder {
 }
 
 // GetForecast mocks base method.
-func (m *MockForecastClient) GetForecast(ctx context.Context, loc *types.UserCoordinates, period string) ([]byte, error) {
+func (m *MockForecastClient) GetForecast(ctx context.Context, loc *types.UserCoordinates, period string) (*types.FullWeatherReport, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetForecast", ctx, loc, period)
-	ret0, _ := ret[0].([]byte)
+	ret0, _ := ret[0].(*types.FullWeatherReport)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -127,7 +127,7 @@ func (m *MockUserDataRepo) EXPECT() *MockUserDataRepoMockRecorder {
 }
 
 // AddUserIfNotExists mocks base method.
-func (m *MockUserDataRepo) AddUserIfNotExists(ctx context.Context, user *telegram_bot_api_v4.User) error {
+func (m *MockUserDataRepo) AddUserIfNotExists(ctx context.Context, user *tgbotapi.User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddUserIfNotExists", ctx, user)
 	ret0, _ := ret[0].(error)
@@ -164,10 +164,10 @@ func (m *MockBotUIRepo) EXPECT() *MockBotUIRepoMockRecorder {
 }
 
 // GetBackToMainMenuKeyboard mocks base method.
-func (m *MockBotUIRepo) GetBackToMainMenuKeyboard() telegram_bot_api_v4.ReplyKeyboardMarkup {
+func (m *MockBotUIRepo) GetBackToMainMenuKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBackToMainMenuKeyboard")
-	ret0, _ := ret[0].(telegram_bot_api_v4.ReplyKeyboardMarkup)
+	ret0, _ := ret[0].(tgbotapi.ReplyKeyboardMarkup)
 	return ret0
 }
 
@@ -178,10 +178,10 @@ func (mr *MockBotUIRepoMockRecorder) GetBackToMainMenuKeyboard() *gomock.Call {
 }
 
 // GetDaysKeyboard mocks base method.
-func (m *MockBotUIRepo) GetDaysKeyboard() telegram_bot_api_v4.ReplyKeyboardMarkup {
+func (m *MockBotUIRepo) GetDaysKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDaysKeyboard")
-	ret0, _ := ret[0].(telegram_bot_api_v4.ReplyKeyboardMarkup)
+	ret0, _ := ret[0].(tgbotapi.ReplyKeyboardMarkup)
 	return ret0
 }
 
@@ -192,10 +192,10 @@ func (mr *MockBotUIRepoMockRecorder) GetDaysKeyboard() *gomock.Call {
 }
 
 // GetDaysOrHoursKeyboard mocks base method.
-func (m *MockBotUIRepo) GetDaysOrHoursKeyboard() telegram_bot_api_v4.ReplyKeyboardMarkup {
+func (m *MockBotUIRepo) GetDaysOrHoursKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDaysOrHoursKeyboard")
-	ret0, _ := ret[0].(telegram_bot_api_v4.ReplyKeyboardMarkup)
+	ret0, _ := ret[0].(tgbotapi.ReplyKeyboardMarkup)
 	return ret0
 }
 
@@ -206,10 +206,10 @@ func (mr *MockBotUIRepoMockRecorder) GetDaysOrHoursKeyboard() *gomock.Call {
 }
 
 // GetHoursKeyboard mocks base method.
-func (m *MockBotUIRepo) GetHoursKeyboard() telegram_bot_api_v4.ReplyKeyboardMarkup {
+func (m *MockBotUIRepo) GetHoursKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetHoursKeyboard")
-	ret0, _ := ret[0].(telegram_bot_api_v4.ReplyKeyboardMarkup)
+	ret0, _ := ret[0].(tgbotapi.ReplyKeyboardMarkup)
 	return ret0
 }
 
@@ -220,10 +220,10 @@ func (mr *MockBotUIRepoMockRecorder) GetHoursKeyboard() *gomock.Call {
 }
 
 // GetMainMenuKeyboard mocks base method.
-func (m *MockBotUIRepo) GetMainMenuKeyboard() telegram_bot_api_v4.ReplyKeyboardMarkup {
+func (m *MockBotUIRepo) GetMainMenuKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMainMenuKeyboard")
-	ret0, _ := ret[0].(telegram_bot_api_v4.ReplyKeyboardMarkup)
+	ret0, _ := ret[0].(tgbotapi.ReplyKeyboardMarkup)
 	return ret0
 }
 
@@ -257,10 +257,10 @@ func (m *MockLocationRepo) EXPECT() *MockLocationRepoMockRecorder {
 }
 
 // GetCoordinatesByCityName mocks base method.
-func (m *MockLocationRepo) GetCoordinatesByCityName(ctx context.Context, locationName string) (telegram_bot_api_v4.Location, error) {
+func (m *MockLocationRepo) GetCoordinatesByCityName(ctx context.Context, locationName string) (*tgbotapi.Location, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCoordinatesByCityName", ctx, locationName)
-	ret0, _ := ret[0].(telegram_bot_api_v4.Location)
+	ret0, _ := ret[0].(*tgbotapi.Location)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -295,7 +295,7 @@ func (m *MockUserLocationRepo) EXPECT() *MockUserLocationRepoMockRecorder {
 }
 
 // AddUserLocationByCoordinates mocks base method.
-func (m *MockUserLocationRepo) AddUserLocationByCoordinates(ctx context.Context, userID int, loc *telegram_bot_api_v4.Location) error {
+func (m *MockUserLocationRepo) AddUserLocationByCoordinates(ctx context.Context, userID int, loc *tgbotapi.Location) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddUserLocationByCoordinates", ctx, userID, loc)
 	ret0, _ := ret[0].(error)
