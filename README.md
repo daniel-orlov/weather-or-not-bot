@@ -9,4 +9,4 @@ precision (from 24 hours up to 16 days ahead). <br/>
 _Requested feature: bot only includes detailed information about the forecast iff the weather actually changes through
  time._
 
-
+@wearthebot
