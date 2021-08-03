@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"weather-or-not-bot/internal/types"
 
 	bot "gopkg.in/telegram-bot-api.v4"
 
@@ -19,12 +20,10 @@ func NewLocationRepo(db *sqlx.DB) *LocationRepo {
 	return &LocationRepo{db: db}
 }
 
-// TODO add places table to db
-
 const getCoordinatesByCityNameQuery = `
-	SELECT latitude, longitude 
-	FROM places
-	WHERE city = $1;
+	SELECT lat, long
+	FROM world_cities
+	WHERE city_ascii = $1;
 	`
 
 func (r *LocationRepo) GetCoordinatesByCityName(ctx context.Context, locationName string) (*bot.Location, error) {
@@ -33,11 +32,11 @@ func (r *LocationRepo) GetCoordinatesByCityName(ctx context.Context, locationNam
 	})
 	log.Debug("Getting the coordinates of the location")
 
-	loc := bot.Location{}
-	err := r.db.GetContext(ctx, &loc, getCoordinatesByCityNameQuery)
+	cityLoc := types.WorldCity{}
+	err := r.db.GetContext(ctx, &cityLoc, getCoordinatesByCityNameQuery, locationName)
 	if err != nil {
-		return &loc, errors.Wrap(err, "cannot get coordinates by location name")
+		return &bot.Location{}, errors.Wrap(err, "cannot get coordinates by location name")
 	}
 
-	return &loc, nil
+	return cityLoc.WorldCityToBotLocation()
 }

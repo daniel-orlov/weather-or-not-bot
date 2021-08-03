@@ -17,7 +17,7 @@ func init() {
 	pflag.String("port", ":8080", "Port to listen to")
 	pflag.Bool("bot_debug_on", true, "Turn on bot debug")
 
-	pflag.String("webhook", "https://some-numbers-here.ngrok.io", "Webhook URL to get updates from bot")
+	pflag.String("webhook", "https://some-numbers.ngrok.io", "Webhook URL to get updates from bot")
 	pflag.String("weather_api_key", `fake_key`, "Client's key to access weather API")
 
 	pflag.String("language", "", "Service language")
