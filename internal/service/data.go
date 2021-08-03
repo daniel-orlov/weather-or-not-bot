@@ -1,4 +1,6 @@
-package main
+package service
+
+// TODO move this data to separate repo
 
 var sayingsEn = []string{
 	"Let's see weather or not you should leave umbrella at home.",
@@ -8,20 +10,6 @@ var sayingsEn = []string{
 	"There is no such thing as bad weather, only different kinds of good weather.",
 	"I've lived in good climate, and it bores the hell out of me.",
 	"Do you know that bad weather always looks worse through a window?",
-}
-
-var forecasts = map[string]string{
-	"Now":       "current?",
-	"3 days":    "forecast/daily?",
-	"5 days":    "forecast/daily?",
-	"7 days":    "forecast/daily?",
-	"10 days":   "forecast/daily?",
-	"16 days":   "forecast/daily?",
-	"24 hours":  "forecast/hourly?hours=24&",
-	"48 hours":  "forecast/hourly?hours=48&",
-	"72 hours":  "forecast/hourly?hours=72&",
-	"96 hours":  "forecast/hourly?hours=96&",
-	"120 hours": "forecast/hourly?hours=120&",
 }
 
 var monthsEn = map[string]string{
@@ -38,55 +26,6 @@ var monthsEn = map[string]string{
 	"11": "November",
 	"12": "December",
 }
-
-var emojisBackUp = map[string]int{
-	"Wind":         127788,
-	"Thermometer":  127777,
-	"Comet":        9732,
-	"N":            11015,
-	"E":            11013,
-	"W":            10145,
-	"S":            11014,
-	"SE":           8598,
-	"ESE":          8598,
-	"SSE":          8598,
-	"SW":           8599,
-	"SSW":          8599,
-	"WSW":          8599,
-	"NW":           8600,
-	"WNW":          8600,
-	"NNW":          8600,
-	"NE":           8601,
-	"ENE":          8601,
-	"NNE":          8601,
-	"Balloon":      127880,
-	"Check":        9989,
-	"Warning":      9888,
-	"Smoking":      128684,
-	"Cross":        10060,
-	"Question":     10067,
-	"ThunderRain":  9928,
-	"Thunder":      127785,
-	"Umbrella":     9730,
-	"UmbrellaRain": 9748,
-	"CloudRain":    127783,
-	"CloudSnow":    127784,
-	"Saturn":       129680,
-	"Fog":          127787,
-	"Sun":          9728,
-	"SunSCloud":    127780,
-	"SunMCloud":    9925,
-	"Cloud":        9729,
-	"Up":           128316,
-	"Down":         128317,
-	"Dry":          129344,
-	"Wet":          128167,
-	"Low":          10549,
-	"High":         10548,
-}
-
-//fetching emojis from db
-var emojis = fetchEmojis(emojisBackUp)
 
 var commentsEn = map[string]string{
 	"no":                "👒 No danger to the average person.",
@@ -126,17 +65,4 @@ var commentsEn = map[string]string{
 	"72Hours":           "72 hours",
 	"96Hours":           "96 hours",
 	"120Hours":          "120 hours",
-}
-
-var timePeriodsEn = map[string]int{
-	"3 days":    3,
-	"5 days":    5,
-	"7 days":    7,
-	"10 days":   10,
-	"16 days":   16,
-	"24 hours":  24,
-	"48 hours":  48,
-	"72 hours":  72,
-	"96 hours":  96,
-	"120 hours": 120,
 }

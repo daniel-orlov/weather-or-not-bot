@@ -1,59 +1,72 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"github.com/jackc/pgx/v4"
-	es "github.com/pkg/errors"
-	"gopkg.in/telegram-bot-api.v4"
 	"net/http"
+	"weather-or-not-bot/internal/repository"
+	"weather-or-not-bot/internal/service"
+	"weather-or-not-bot/internal/transport"
+	"weather-or-not-bot/internal/utils"
+
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
 
+func init() {
+	pflag.String("bot_token", `fake_token`, "Token to access Telegram Bot API")
+	pflag.String("port", ":8080", "Port to listen to")
+	pflag.Bool("bot_debug_on", true, "Turn on bot debug")
+
+	pflag.String("webhook", "https://db1202f41701.ngrok.io", "Webhook URL to get updates from bot")
+	pflag.String("weather_api_key", `fake_key`, "Client's key to access weather API")
+
+	pflag.String("language", "", "Service language")
+
+	pflag.Parse()
+	_ = viper.BindPFlags(pflag.CommandLine)
+	viper.AutomaticEnv()
+}
+
 func main() {
-	//parsing config from .env
-	var cfg = parseConfig()
+	// Creating logger
+	ctx, cancelFunc := utils.NewLogger()
+	defer cancelFunc()
 
-	//establishing connection to database
-	conn, err := pgx.Connect(context.Background(), cfg.DbUrl)
+	// Establishing connection to database.
+	db := utils.NewDBFromEnv()
+	defer db.Close()
+
+	// Running init SQL
+	err := utils.RunInitMigration(ctx, db)
 	if err != nil {
-		err = es.Wrap(err, "Unable to connect to database")
-		fmt.Println(err)
-	}
-	defer conn.Close(context.Background())
-
-	//creating a new BotAPI instance using token
-	bot, err := tgbotapi.NewBotAPI(cfg.BotToken)
-	if err != nil {
-		err = es.Wrap(err, "failed to create new BotAPI with given token")
-		fmt.Println(err)
-	}
-	fmt.Printf("Authorized on account %s\n", bot.Self.UserName)
-
-	// bot.Debug = true
-
-	//setting a webhook
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook(cfg.WebhookURL))
-	if err != nil {
-		err = es.Wrap(err, "failed to set WebHook")
-		fmt.Println(err)
+		logrus.WithError(err).Fatal("Cannot listen and serve")
 	}
 
-	//registering an http handler for a webhook, returns UpdatesChannel (<-chan Update)
-	updates := bot.ListenForWebhook("/")
+	// Initiating all repositories.
+	usrRepo := repository.NewUserDataRepo(db)
+	locRepo := repository.NewLocationRepo(db)
+	usrLocRepo := repository.NewUserLocationRepo(db)
+	botUIRepo := repository.NewBotUIRepo()
 
-	//launching a server on a local host :8080
-	go http.ListenAndServe(cfg.Port, nil)
-	fmt.Println("start listen", cfg.Port)
+	// Establishing client connections.
+	botClient := service.NewBotCmd(utils.NewBotApi())
+	forecastClient := repository.NewForecastClient()
 
-	//handling messages from user
-	for update := range updates {
-		fmt.Printf("TEXT: %+v\n", update.Message.Text)
-		userMsg := NewUserMessage(bot, conn, &update)
-		text := update.Message.Text
-		if handle, ok := handlersEn[text]; ok {
-			handle(&userMsg)
-		} else {
-			handleLocationByText(&userMsg)
+	formatter := service.NewFormatter()
+
+	// Instantiating main service.
+	svc := service.NewMessageService(botClient, forecastClient, formatter, botUIRepo, locRepo, usrLocRepo, usrRepo)
+
+	// Launching a server.
+	go func() {
+		err := http.ListenAndServe(viper.GetString("port"), nil)
+		if err != nil {
+			logrus.WithError(err).Fatal("Cannot listen and serve")
 		}
-	}
+	}()
+	logrus.Infof("Start listen on port %s", viper.GetString("port"))
+
+	//Handling messages from user.
+	updatesHandler := transport.NewUpdatesHandler(svc, botClient.ListenForWebhook("/"))
+	updatesHandler.HandleUpdates(ctx)
 }
