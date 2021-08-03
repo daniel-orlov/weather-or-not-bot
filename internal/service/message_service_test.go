@@ -34,7 +34,7 @@ func TestMessageService_HandleNewMessage(t *testing.T) {
 	}
 	botLoc := &bot.Location{
 		Longitude: 45.16,
-		Latitude: 12.32,
+		Latitude:  12.32,
 	}
 
 	wr := &types.FullWeatherReport{
@@ -88,7 +88,7 @@ func TestMessageService_HandleNewMessage(t *testing.T) {
 		hours96 = &bot.Update{UpdateID: 90, Message: &bot.Message{MessageID: 119, Text: NinetySixHours, From: user, Chat: &bot.Chat{ID: chatID}}}
 		here    = &bot.Update{UpdateID: 14, Message: &bot.Message{MessageID: 120, Text: WeatherHere, From: user, Chat: &bot.Chat{ID: chatID}, Location: botLoc}}
 		there   = &bot.Update{UpdateID: 21, Message: &bot.Message{MessageID: 120, Text: WeatherElsewhere, From: user, Chat: &bot.Chat{ID: chatID}}}
-		tallinn   = &bot.Update{UpdateID: 33, Message: &bot.Message{MessageID: 121, Text: "Tallinn", From: user, Chat: &bot.Chat{ID: chatID}}}
+		tallinn = &bot.Update{UpdateID: 33, Message: &bot.Message{MessageID: 121, Text: "Tallinn", From: user, Chat: &bot.Chat{ID: chatID}}}
 	)
 
 	tests := []struct {
@@ -175,9 +175,8 @@ func TestMessageService_HandleNewMessage(t *testing.T) {
 			upd:     tallinn,
 			wantErr: false,
 		},
-
 		{
-			name: ". Success on handling Stop",
+			name: "8. Success on handling Stop",
 			prepare: func(bc *mock.MockBotClient, fc *mock.MockForecastClient, rf *mock.MockReportFormatter, br *mock.MockBotUIRepo, lr *mock.MockLocationRepo, ulr *mock.MockUserLocationRepo, ur *mock.MockUserDataRepo) {
 				resp := bot.NewMessage(chatID, commentsEn["End"])
 				resp.ReplyMarkup = bot.ReplyKeyboardHide{HideKeyboard: true}
@@ -187,7 +186,7 @@ func TestMessageService_HandleNewMessage(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: ". Success on handling Start",
+			name: "9. Success on handling Start",
 			prepare: func(bc *mock.MockBotClient, fc *mock.MockForecastClient, rf *mock.MockReportFormatter, br *mock.MockBotUIRepo, lr *mock.MockLocationRepo, ulr *mock.MockUserLocationRepo, ur *mock.MockUserDataRepo) {
 				ur.EXPECT().AddUserIfNotExists(ctx, user).Return(nil)
 				resp := bot.NewMessage(chatID, fmt.Sprintf("%s\n%s", commentsEn["DefaultMessage"], pickASaying(start.Message.MessageID, sayingsEn)))
@@ -199,7 +198,7 @@ func TestMessageService_HandleNewMessage(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: ". Success on handling BackToMainMenu",
+			name: "10. Success on handling BackToMainMenu",
 			prepare: func(bc *mock.MockBotClient, fc *mock.MockForecastClient, rf *mock.MockReportFormatter, br *mock.MockBotUIRepo, lr *mock.MockLocationRepo, ulr *mock.MockUserLocationRepo, ur *mock.MockUserDataRepo) {
 				resp := bot.NewMessage(chatID, commentsEn["ChooseLocation"])
 				resp.ReplyMarkup = mainMenu
@@ -210,7 +209,7 @@ func TestMessageService_HandleNewMessage(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: ". Success on handling Back",
+			name: "11. Success on handling Back",
 			prepare: func(bc *mock.MockBotClient, fc *mock.MockForecastClient, rf *mock.MockReportFormatter, br *mock.MockBotUIRepo, lr *mock.MockLocationRepo, ulr *mock.MockUserLocationRepo, ur *mock.MockUserDataRepo) {
 				resp := bot.NewMessage(chatID, commentsEn["ChoosePeriodType"])
 				resp.ReplyMarkup = chPeriod
@@ -221,7 +220,7 @@ func TestMessageService_HandleNewMessage(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: ". Success on handling ByHours",
+			name: "12. Success on handling ByHours",
 			prepare: func(bc *mock.MockBotClient, fc *mock.MockForecastClient, rf *mock.MockReportFormatter, br *mock.MockBotUIRepo, lr *mock.MockLocationRepo, ulr *mock.MockUserLocationRepo, ur *mock.MockUserDataRepo) {
 				resp := bot.NewMessage(chatID, commentsEn["ChoosePeriod"])
 				resp.ReplyMarkup = chHours
@@ -232,7 +231,7 @@ func TestMessageService_HandleNewMessage(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: ". Success on handling ByDays",
+			name: "13. Success on handling ByDays",
 			prepare: func(bc *mock.MockBotClient, fc *mock.MockForecastClient, rf *mock.MockReportFormatter, br *mock.MockBotUIRepo, lr *mock.MockLocationRepo, ulr *mock.MockUserLocationRepo, ur *mock.MockUserDataRepo) {
 				resp := bot.NewMessage(chatID, commentsEn["ChoosePeriod"])
 				resp.ReplyMarkup = chDays
@@ -243,7 +242,7 @@ func TestMessageService_HandleNewMessage(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: ".  Success on handling Now",
+			name: "14. Success on handling Now",
 			prepare: func(bc *mock.MockBotClient, fc *mock.MockForecastClient, rf *mock.MockReportFormatter, br *mock.MockBotUIRepo, lr *mock.MockLocationRepo, ulr *mock.MockUserLocationRepo, ur *mock.MockUserDataRepo) {
 				ulr.EXPECT().GetUserRecentLocation(ctx, user.ID).Return(uLoc, nil)
 				fc.EXPECT().GetForecast(ctx, uLoc, current.Message.Text).Return(wr, nil)
@@ -258,7 +257,7 @@ func TestMessageService_HandleNewMessage(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: ".  Success on handling FiveDays",
+			name: "15. Success on handling FiveDays",
 			prepare: func(bc *mock.MockBotClient, fc *mock.MockForecastClient, rf *mock.MockReportFormatter, br *mock.MockBotUIRepo, lr *mock.MockLocationRepo, ulr *mock.MockUserLocationRepo, ur *mock.MockUserDataRepo) {
 				ulr.EXPECT().GetUserRecentLocation(ctx, user.ID).Return(uLoc, nil)
 				fc.EXPECT().GetForecast(ctx, uLoc, days5.Message.Text).Return(wr, nil)
@@ -273,7 +272,7 @@ func TestMessageService_HandleNewMessage(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: ".  Success on handling NinetySixHours",
+			name: "16. Success on handling NinetySixHours",
 			prepare: func(bc *mock.MockBotClient, fc *mock.MockForecastClient, rf *mock.MockReportFormatter, br *mock.MockBotUIRepo, lr *mock.MockLocationRepo, ulr *mock.MockUserLocationRepo, ur *mock.MockUserDataRepo) {
 				ulr.EXPECT().GetUserRecentLocation(ctx, user.ID).Return(uLoc, nil)
 				fc.EXPECT().GetForecast(ctx, uLoc, hours96.Message.Text).Return(wr, nil)
@@ -288,7 +287,7 @@ func TestMessageService_HandleNewMessage(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: ". Success on handling WeatherHere",
+			name: "17. Success on handling WeatherHere",
 			prepare: func(bc *mock.MockBotClient, fc *mock.MockForecastClient, rf *mock.MockReportFormatter, br *mock.MockBotUIRepo, lr *mock.MockLocationRepo, ulr *mock.MockUserLocationRepo, ur *mock.MockUserDataRepo) {
 				ulr.EXPECT().AddUserLocationByCoordinates(ctx, user.ID, here.Message.Location).Return(nil)
 				resp := bot.NewMessage(chatID, commentsEn["CoordsAccepted"])
@@ -300,7 +299,7 @@ func TestMessageService_HandleNewMessage(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: ". Success on handling WeatherElsewhere",
+			name: "18. Success on handling WeatherElsewhere",
 			prepare: func(bc *mock.MockBotClient, fc *mock.MockForecastClient, rf *mock.MockReportFormatter, br *mock.MockBotUIRepo, lr *mock.MockLocationRepo, ulr *mock.MockUserLocationRepo, ur *mock.MockUserDataRepo) {
 				resp := bot.NewMessage(chatID, commentsEn["DiffPlaceAccepted"])
 				resp.ReplyMarkup = bot.ReplyKeyboardHide{HideKeyboard: true}
